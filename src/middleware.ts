@@ -1,32 +1,30 @@
 import { NextResponse, NextRequest } from 'next/server'
-
-// export { default } from "next-auth/middleware"
 import { getToken } from 'next-auth/jwt'
+
 export async function middleware(request: NextRequest) {
-    const token = await getToken({ req: request })
-    const url = request.nextUrl
+  const token = await getToken({ req: request })
+  const url = request.nextUrl
+  const pathname = url.pathname
 
-    if(token &&
-        (
-        url.pathname.startsWith('/sign-up')||
-        url.pathname.startsWith('/sign-in') ||
-        url.pathname.startsWith('/verify')||
-        url.pathname.startsWith('/')
+  const isAuthRoute = ['/sign-in', '/sign-up', '/verify'].some(path =>
+    pathname.startsWith(path)
+  )
 
-    )
-    ) {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
+  const isProtectedRoute = pathname.startsWith('/dashboard')
 
-    }
+  // ✅ Authenticated user trying to access login/register/verify routes
+  if (token && (isAuthRoute || pathname === '/')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
 
-    if(!token && url.pathname.startsWith('/dashboard')) {
-        return NextResponse.redirect(new URL('/sign-in', request.url))
-    }
+  // ✅ Unauthenticated user trying to access protected route
+  if (!token && isProtectedRoute) {
+    return NextResponse.redirect(new URL('/sign-in', request.url))
+  }
 
-    return NextResponse.next()
-
+  return NextResponse.next()
 }
- 
+
 export const config = {
   matcher: [
     '/sign-in',
@@ -34,7 +32,5 @@ export const config = {
     '/',
     '/dashboard/:path*',
     '/verify/:path*',
-
-
   ],
 }

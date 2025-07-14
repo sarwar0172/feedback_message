@@ -19,7 +19,7 @@ export async function GET(req:Request){
    console.log(result)
    if(!result.success){
        const userNmaeErrors=result.error.format().username?._errors || [];
-       return Response.json({ success: false, message: "username validation error", errors: userNmaeErrors }, { status: 400 })
+       return Response.json({ success: false, message: userNmaeErrors, errors: userNmaeErrors }, { status: 400 })
    }
    const {username}=result.data;
 
